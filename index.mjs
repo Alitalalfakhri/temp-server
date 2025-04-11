@@ -7,7 +7,7 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: 'https://3ae136ae-a5de-4351-85cc-4b56963af724-00-1bhn45hk2nnyl.sisko.replit.dev',
+  origin: "https://client-tau-seven.vercel.app",
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 };
 
