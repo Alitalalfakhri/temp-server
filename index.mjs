@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
-
+import dotenv from "dotenv"
 const port = 3000;
 const app = express();
 
@@ -16,9 +16,10 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 
 // Database connection
+const URI = process.env.URI
 async function connectDB() {
   try {
-    await mongoose.connect('mongodb+srv://alitalalfakhri0009:AoXTFVYzjtR48rGM@cluster0.j51q2rm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
+    await mongoose.connect(URI);
     console.log('Connected to MongoDB');
   } catch (err) {
     console.error('Database connection error:', err.message);
