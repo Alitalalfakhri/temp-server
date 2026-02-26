@@ -5,6 +5,7 @@ const rateLimiter = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const prductsRoute = require("./routers/products")
 const adminroute = require('./routers/admin')
+const mediaRoute = require('./routers/media')
 const dns = require('node:dns')
 
 dns.setServers([
@@ -27,7 +28,7 @@ const app = express();
 const port = 5000;
 app.use(express.json());
 app.use(cors({
-  origin: ['https://temp-admin-silk.vercel.app' , 'https://temp-client-three.vercel.app'], // Ensure this matches your client's URL
+  origin: ['https://temp-admin-silk.vercel.app' , 'https://temp-client-three.vercel.app', 'http://localhost:3000' , 'http://localhost:3001'], // Ensure this matches your client's URL
   credentials: true
 }));
 
@@ -48,6 +49,7 @@ app.use(prductsRoute)
 
 app.use(adminroute)
 
+app.use(mediaRoute)
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
