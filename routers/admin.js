@@ -60,7 +60,7 @@ const Admin = mongoose.model('Admin', adminSchema);
 async function addAdmin(username, password, idNumber) {
     try {
         // 1. Generate Salt
-        const salt = await bcrypt.genSalt(10);
+        const salt = await bcrypt.genSalt(4);
         
         // 2. Hash ONLY the password
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -82,8 +82,7 @@ async function addAdmin(username, password, idNumber) {
 }
 
 // Call the function
-// addAdmin('ahmed' , 'kp8@.etiR?kowA' , '8192')
-
+//addAdmin('ahmed' , 'rs8Am' , '8192')
 router.post('/api/sign', signInLimiter,async(req , res) => {
     const data = req.body;
 

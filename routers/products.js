@@ -41,7 +41,7 @@ router.get('/api/products' , (req , res) => {
 })
 
 
-router.post("/api/add/product", 
+router.post("/api/add/product", authenticate , 
     upload.single("image"),
     body('title').notEmpty().withMessage("title is required"), 
     body('sizes').notEmpty().withMessage("Sizes are required"),

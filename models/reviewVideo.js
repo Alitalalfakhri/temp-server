@@ -7,7 +7,7 @@ const reviewVideoSCchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: true
+        required: false
     },
     role:{
         type: String,
