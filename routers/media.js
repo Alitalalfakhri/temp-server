@@ -65,7 +65,12 @@ router.post("/api/add/video", authenticate,async (req, res) =>{
 
     }
     }
-)
+);
+
+router.get('/api/reviews/videos' , async(req , res) => {
+    const videos = await ReviewVideos.find()
+    res.json(videos)
+})
 
 router.post("/api/add/image" , upload.single("image") ,async (req, res) =>{
     
