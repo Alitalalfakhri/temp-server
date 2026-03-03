@@ -72,7 +72,14 @@ router.get('/api/reviews/videos' , async(req , res) => {
     res.json(videos)
 })
 
-router.post("/api/add/image" , upload.single("image") ,async (req, res) =>{
+router.get('/api/factory/videos' , async(req , res) => {
+    const videos = await FactoryVideos.find()
+    res.json(videos)
+})
+
+
+
+/*router.post("/api/add/image" , upload.single("image") ,async (req, res) =>{
     
    if(!req.file){
     return res.json({message:"no image "}).status(400)
@@ -90,6 +97,40 @@ router.post("/api/add/image" , upload.single("image") ,async (req, res) =>{
      await image.save()
      return res.json({message:"image added"}).status(200)
    }
+})*/
+
+router.post("/api/add/image", upload.single("image"), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ message: "no image" });
+    }
+
+    try {
+        const result = await imagekit.upload({
+            file: req.file.buffer,
+            fileName: `img_library${Date.now()}`,
+            folder: "/library",
+        });
+
+        const image = new FactoryImage({
+            imageUrl: result.url,
+            fileId: result.fileId,  
+            title: req.body.title,
+        });
+
+        await image.save();
+        return res.status(200).json({ message: "image added" });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Upload failed", error: err.message });
+    }
+});
+
+
+router.get('/api/images' , async(req , res) => {
+    const images = await FactoryImage.find()
+    res.json(images)
+
 })
 // Delete a video by ID
 router.delete("/api/delete/video/:id", authenticate, async (req, res) => {
@@ -116,66 +157,40 @@ router.delete("/api/delete/video/:id", authenticate, async (req, res) => {
 
 
 // Delete an image by ID (and from ImageKit)
-router.delete("/api/delete/image/:id", authenticate, async (req, res) => {
-    const imageId = req.params.id;
-
+router.delete("/api/delete/image/:id" , async (req, res) => {
     try {
-        // 1️⃣ Find the image in MongoDB
-        const image = await FactoryImage.findById(imageId);
+        const image = await FactoryImage.findById(req.params.id);
         if (!image) {
-            return res.status(404).json({ 
-                success: false,
-                message: "Image not found in database" 
-            });
+            return res.status(404).json({ success: false, message: "Image not found in database" });
         }
 
-        // 2️⃣ Extract ImageKit file path from URL
-        const urlParts = image.imageUrl.split(".io/");
-        if (!urlParts[1]) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid image URL format, cannot extract file path"
-            });
-        }
-        const filePath = urlParts[1];
-
-        // 3️⃣ Attempt to delete from ImageKit
+        // ✅ Use stored fileId directly — no URL parsing or searching needed
         try {
-            await imagekit.deleteFile(filePath);
+            await imagekit.deleteFile(image.fileId);
         } catch (ikError) {
             console.error("ImageKit deletion error:", ikError);
             return res.status(500).json({
                 success: false,
                 message: "Failed to delete image from ImageKit",
-                error: ikError.message
+                error: ikError.message,
             });
         }
 
-        // 4️⃣ Delete document from MongoDB
-        try {
-            await FactoryImage.findByIdAndDelete(imageId);
-        } catch (dbError) {
-            console.error("MongoDB deletion error:", dbError);
-            return res.status(500).json({
-                success: false,
-                message: "Image deleted from ImageKit but failed to remove from database",
-                error: dbError.message
-            });
-        }
+        await FactoryImage.findByIdAndDelete(req.params.id);
 
-        // 5️⃣ Success response
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
-            message: "Image deleted successfully from both DB and ImageKit"
+            message: "Image deleted successfully from both DB and ImageKit",
         });
 
     } catch (err) {
         console.error("Unexpected server error:", err);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
-            message: "Unexpected server error occurred",
-            error: err.message
+            message: "Unexpected server error",
+            error: err.message,
         });
     }
 });
+
 module.exports  = router;

@@ -4,6 +4,14 @@ const imagesSchema = new mongoose.Schema({
     imageUrl: {
         type: String,
         required: true
+    },
+    fileId:{
+        type: String,
+        required: true
+    },
+    title:{
+        type:String,
+        required:false
     }
 
 })
