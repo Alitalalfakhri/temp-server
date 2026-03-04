@@ -4,6 +4,10 @@ const factoryVideosSchema = new mongoose.Schema({
     videoUrl: {
         type: String,
         required: true
+    },
+    title:{
+        type:String,
+        required:false
     }
 });
 

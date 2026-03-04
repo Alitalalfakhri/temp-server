@@ -58,6 +58,7 @@ router.post("/api/add/video", authenticate,async (req, res) =>{
     if(videoData.videoType === 'factory'){
         const video = new FactoryVideos({
             videoUrl:videoData.videoUrl,
+            title:videoData.title
             
         })
         await video.save()
