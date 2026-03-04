@@ -12,7 +12,7 @@ dns.setServers([
   '8.8.8.8',
 ]);
 
-/*const limiter = rateLimiter({
+const limiter = rateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 200,
   message: 'Too many requests from this IP, please try again later.',
@@ -20,7 +20,7 @@ dns.setServers([
   standardHeaders: true,
   legacyHeaders: false,
 })
-*/
+
 //516Q6wXpUU8U02mQ
 //altaifproject09_db_user
 const app = express();
@@ -33,7 +33,7 @@ app.use(cors({
 
 app.use(cookieParser())
 
-//app.use(limiter);
+app.use(limiter);
 
 const URI = process.env.URI
   mongoose.connect(URI)
