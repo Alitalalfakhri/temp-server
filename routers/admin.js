@@ -81,8 +81,7 @@ async function addAdmin(username, password, idNumber) {
     }
 }
 
-// Call the function
-//addAdmin('ahmed' , 'rs8Am' , '8192')
+
 router.post('/api/sign', signInLimiter,async(req , res) => {
     const data = req.body;
 

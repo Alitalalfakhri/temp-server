@@ -21,8 +21,7 @@ const limiter = rateLimiter({
   legacyHeaders: false,
 })
 
-//516Q6wXpUU8U02mQ
-//altaifproject09_db_user
+
 const app = express();
 const port = 5000;
 app.use(express.json());
