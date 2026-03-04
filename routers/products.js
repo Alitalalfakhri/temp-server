@@ -72,6 +72,7 @@ router.post("/api/add/product", authenticate ,
                 sizes: sizes,
                 imageLink: result.url,
                 id: result.fileId, // <--- THIS IS THE KEY PART
+                videoLink: productData.videoLink || "",
             });
 
             await product.save();
@@ -111,6 +112,7 @@ router.put("/api/product/edit/:id", authenticate, upload.single("image"), async 
         product.title = req.body.title || product.title;
         product.description = req.body.description || product.description;
         if (req.body.sizes) product.sizes = JSON.parse(req.body.sizes);
+        if (req.body.videoLink !== undefined) product.videoLink = req.body.videoLink || "";
 
         if (req.file) {
             // 1. Upload new image

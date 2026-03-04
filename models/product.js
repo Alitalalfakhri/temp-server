@@ -33,8 +33,13 @@ const ProductSchema = new mongoose.Schema({
   imageLink:{
     type: String,
     required: true,
-    
-  }
+
+  },
+  videoLink: {
+    type: String,
+    required: false,
+    default: "",
+  },
 });
 
 const Product = mongoose.model("Product", ProductSchema);
