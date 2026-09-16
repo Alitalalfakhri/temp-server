@@ -5,6 +5,8 @@ const router = require('express').Router();
 const imagekit = require('./iamgekit')
 
 const upload = require('./multer')
+const fs = require('fs/promises')
+const path = require('path')
 
 const dotenv = require('dotenv');
 
@@ -41,46 +43,64 @@ router.get('/api/products' , (req , res) => {
 })
 
 
-router.post("/api/add/product", authenticate , 
+router.post(
+    "/api/add/product",
+    authenticate,
     upload.single("image"),
-    body('title').notEmpty().withMessage("title is required"), 
-    body('sizes').notEmpty().withMessage("Sizes are required"),
+
+    body("title").notEmpty().withMessage("title is required"),
+    
+
     async (req, res) => {
         const productData = req.body;
         const errors = validationResult(req);
-        if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
 
         try {
-            if (!req.file) return res.status(400).json({ message: "No image provided" });
-
-            let sizes = productData.sizes;
-            if (typeof sizes === "string") {
-                try { sizes = JSON.parse(sizes); } catch (err) { return res.status(400).json({ message: "Invalid sizes" }); }
+            if (!req.file) {
+                return res.status(400).json({ message: "No image provided" });
             }
 
-            // 1. Upload to ImageKit
-            const result = await imagekit.upload({
-                file: req.file.buffer,
-                fileName: `img_${productData.title}_${Date.now()}`, // Added timestamp to avoid naming collisions
-                folder: "/products",
-            });
+            let sizes = productData.sizes;
 
-            // 2. Save the result.fileId into your DB 'id' field
+            if (typeof sizes === "string") {
+                try {
+                    sizes = JSON.parse(sizes);
+                } catch (err) {
+                    return res.status(400).json({ message: "Invalid sizes" });
+                }
+            }
+
+            // The image is already saved by Multer
+            const imageLink = `/uploads/products/${req.file.filename}`;
+
             const product = new Product({
                 title: productData.title,
                 description: productData.description,
                 sizes: sizes,
-                imageLink: result.url,
-                id: result.fileId, // <--- THIS IS THE KEY PART
+                imageLink: imageLink,
+                id: req.file.filename,
                 videoLink: productData.videoLink || "",
             });
 
             await product.save();
-            res.json({ message: "Product added!", product });
+
+            res.json({
+                message: "Product added!",
+                product
+            });
+
         } catch (error) {
-            res.status(500).json({ message: "Upload failed", error: error.message });
+            res.status(500).json({
+                message: "Upload failed",
+                error: error.message
+            });
         }
-});
+    }
+);
 
 
 // GET single product
@@ -117,7 +137,7 @@ router.put("/api/product/edit/:id", authenticate, upload.single("image"), async 
         if (req.file) {
             // 1. Upload new image
             const result = await imagekit.upload({
-                file: req.file.buffer,
+                file: await fs.readFile(req.file.path),
                 fileName: `product_${Date.now()}`,
                 folder: "/products",
             });
@@ -125,6 +145,7 @@ router.put("/api/product/edit/:id", authenticate, upload.single("image"), async 
             newlyUploadedFileId = result.fileId;
             product.imageLink = result.url;
             product.id = result.fileId; // Update DB with the NEW fileId
+            await fs.unlink(req.file.path);
         }
 
         // 2. Save DB changes
@@ -155,13 +176,20 @@ router.delete('/api/product/:id', authenticate ,async (req, res) => {
             return res.status(404).json('Product not found');
         }
 
-        // 2. Delete from ImageKit using the 'id' field you saved during POST/PUT
-        // According to your POST route, product.id contains result.fileId
-        if (product.id) {
-            await imagekit.deleteFile(product.id); 
+        // Products added through Multer use a local upload path. Edited products
+        // may instead point to an ImageKit file.
+        try {
+            if (product.imageLink?.startsWith('/uploads/products/')) {
+                const localImagePath = path.join(__dirname, '..', product.imageLink);
+                await fs.unlink(localImagePath);
+            } else if (product.id) {
+                await imagekit.deleteFile(product.id);
+            }
+        } catch (cleanupError) {
+            console.error("Image cleanup failed:", cleanupError);
         }
 
-        // 3. Delete the document from MongoDB
+        // The database record must not remain when image cleanup fails.
         await Product.findByIdAndDelete(mongoId);
 
         res.json('Product and associated image deleted successfully.');

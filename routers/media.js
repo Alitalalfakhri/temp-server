@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const imagekit = require('./iamgekit')
 
 const upload = require('./multer')
+const fs = require('fs/promises')
 
 const dotenv = require('dotenv');
 
@@ -107,7 +108,7 @@ router.post("/api/add/image", upload.single("image"), async (req, res) => {
 
     try {
         const result = await imagekit.upload({
-            file: req.file.buffer,
+            file: await fs.readFile(req.file.path),
             fileName: `img_library${Date.now()}`,
             folder: "/library",
         });
@@ -119,9 +120,13 @@ router.post("/api/add/image", upload.single("image"), async (req, res) => {
         });
 
         await image.save();
+        await fs.unlink(req.file.path);
         return res.status(200).json({ message: "image added" });
 
     } catch (err) {
+        if (req.file?.path) {
+            await fs.unlink(req.file.path).catch(() => {});
+        }
         console.error(err);
         return res.status(500).json({ message: "Upload failed", error: err.message });
     }

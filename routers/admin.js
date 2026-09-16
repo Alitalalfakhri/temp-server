@@ -27,9 +27,7 @@ const adminSchema = new mongoose.Schema({
     idNumber: { type: String, required: true, unique: true }
 });
 
-console.log(
-    'he'
-)
+
 const Admin = mongoose.model('Admin', adminSchema);
 
 // --- Fixed addAdmin Function ---
