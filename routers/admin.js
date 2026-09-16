@@ -2,31 +2,7 @@ const router = require('express').Router();
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const rateLimit = require("express-rate-limit");
-const jwt = require('jsonwebtoken');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+const jwt = require('jsonwebtoken')
 
 
 const signInLimiter = rateLimit({
