@@ -7,7 +7,7 @@ const imagesSchema = new mongoose.Schema({
     },
     fileId:{
         type: String,
-        required: true
+        required: false
     },
     title:{
         type:String,

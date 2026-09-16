@@ -2,30 +2,30 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-const uploadPath = path.join(__dirname, "../uploads/products");
+const createStorage = (uploadPath) => {
+  if (!fs.existsSync(uploadPath)) {
+    fs.mkdirSync(uploadPath, { recursive: true });
+  }
 
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
-}
+  return multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadPath);
+    },
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadPath);
-  },
+    filename: (req, file, cb) => {
+      const uniqueName =
+        Date.now() +
+        "-" +
+        Math.round(Math.random() * 1e9) +
+        path.extname(file.originalname);
 
-  filename: (req, file, cb) => {
-    const uniqueName =
-      Date.now() +
-      "-" +
-      Math.round(Math.random() * 1e9) +
-      path.extname(file.originalname);
+      cb(null, uniqueName);
+    },
+  });
+};
 
-    cb(null, uniqueName);
-  },
-});
-
-const upload = multer({
-  storage,
+const createUpload = (uploadPath) => multer({
+  storage: createStorage(uploadPath),
 
   limits: {
     fileSize: 25 * 1024 * 1024, // 25MB
@@ -46,4 +46,8 @@ const upload = multer({
     },
 });
 
+const upload = createUpload(path.join(__dirname, "../uploads/products"));
+const libraryUpload = createUpload(path.join(__dirname, "../uploads/library"));
+
 module.exports = upload;
+module.exports.libraryUpload = libraryUpload;

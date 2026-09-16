@@ -54,29 +54,7 @@ mongoose.connect(URI)
 
   const uploadsPath = path.join(__dirname, "uploads");
 
-console.log("SERVING UPLOADS FROM:", uploadsPath);
-console.log("UPLOADS EXISTS:", fs.existsSync(uploadsPath));
-app.get("/test-image", (req, res) => {
-    const filePath = path.join(
-        __dirname,
-        "uploads",
-        "products",
-        "1789593736923-577778771.png"
-    );
 
-    console.log("FILE PATH:", filePath);
-    console.log("EXISTS:", fs.existsSync(filePath));
-
-    if (!fs.existsSync(filePath)) {
-        return res.status(404).send("File does not exist");
-    }
-
-    const stats = fs.statSync(filePath);
-
-    console.log("FILE SIZE:", stats.size);
-
-    res.sendFile(filePath);
-});
 app.use("/uploads", express.static(uploadsPath));
 
 app.use(prductsRoute)

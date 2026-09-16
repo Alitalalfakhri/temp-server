@@ -4,8 +4,9 @@ const jwt = require('jsonwebtoken');
 
 const imagekit = require('./iamgekit')
 
-const upload = require('./multer')
+const { libraryUpload } = require('./multer')
 const fs = require('fs/promises')
+const path = require('path')
 
 const dotenv = require('dotenv');
 
@@ -101,26 +102,18 @@ router.get('/api/factory/videos' , async(req , res) => {
    }
 })*/
 
-router.post("/api/add/image", upload.single("image"), async (req, res) => {
+router.post("/api/add/image", libraryUpload.single("image"), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ message: "no image" });
     }
 
     try {
-        const result = await imagekit.upload({
-            file: await fs.readFile(req.file.path),
-            fileName: `img_library${Date.now()}`,
-            folder: "/library",
-        });
-
         const image = new FactoryImage({
-            imageUrl: result.url,
-            fileId: result.fileId,  
+            imageUrl: `/uploads/library/${req.file.filename}`,
             title: req.body.title,
         });
 
         await image.save();
-        await fs.unlink(req.file.path);
         return res.status(200).json({ message: "image added" });
 
     } catch (err) {
@@ -170,15 +163,21 @@ router.delete("/api/delete/image/:id" , async (req, res) => {
             return res.status(404).json({ success: false, message: "Image not found in database" });
         }
 
-        // ✅ Use stored fileId directly — no URL parsing or searching needed
-        try {
-            await imagekit.deleteFile(image.fileId);
-        } catch (ikError) {
-            console.error("ImageKit deletion error:", ikError);
-            return res.status(500).json({
-                success: false,
-                message: "Failed to delete image from ImageKit",
-                error: ikError.message,
+        if (image.fileId) {
+            try {
+                await imagekit.deleteFile(image.fileId);
+            } catch (ikError) {
+                console.error("ImageKit deletion error:", ikError);
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to delete image from ImageKit",
+                    error: ikError.message,
+                });
+            }
+        } else if (image.imageUrl?.startsWith("/uploads/library/")) {
+            const localImagePath = path.join(__dirname, "..", image.imageUrl);
+            await fs.unlink(localImagePath).catch((unlinkError) => {
+                if (unlinkError.code !== "ENOENT") throw unlinkError;
             });
         }
 
